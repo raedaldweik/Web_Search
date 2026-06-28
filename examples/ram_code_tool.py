@@ -25,7 +25,11 @@ BASE_URL = "https://api.tavily.com"
 def _split(raw: str) -> list[str]:
     out = []
     for p in (raw or "").replace("\n", ",").split(","):
-        h = p.strip().lower().split("://")[-1].split("/")[0].lstrip("*.")
+        h = p.strip().lower().split("://")[-1].split("/")[0]
+        if h.startswith("*."):
+            h = h[2:]
+        if h.startswith("www."):  # match _host() so "www.gov.ae" == "gov.ae"
+            h = h[4:]
         if h:
             out.append(h)
     return list(dict.fromkeys(out))

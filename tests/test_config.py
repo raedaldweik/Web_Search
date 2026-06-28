@@ -10,7 +10,11 @@ def test_split_list_handles_newlines_and_blanks():
 
 
 def test_split_list_strips_scheme_path_and_wildcards():
-    assert _split_list("https://www.gov.ae/news") == ["www.gov.ae"]
+    # www. is stripped so a configured "www.gov.ae" / full URL still matches a
+    # candidate host normalised to "gov.ae" (regression: otherwise the allow
+    # list would silently match nothing).
+    assert _split_list("https://www.gov.ae/news") == ["gov.ae"]
+    assert _split_list("www.gov.ae") == ["gov.ae"]
     assert _split_list("*.gov.ae") == ["gov.ae"]
 
 

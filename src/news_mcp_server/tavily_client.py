@@ -109,12 +109,17 @@ async def search(
         payload["days"] = days
 
     # Domain policy: approved list narrows (intersection), blocked list widens
-    # the exclusions. A tool argument can only narrow, never broaden.
-    inc = list(include_domains or [])
+    # the exclusions. A tool argument can only narrow, never broaden. A caller
+    # may narrow to a sub-domain of an approved domain (e.g. include
+    # "traffic.gov.ae" when "gov.ae" is approved); anything not under an
+    # approved domain is dropped, falling back to the full approved list.
+    inc = [_host_of(d) for d in (include_domains or [])]
     if APPROVED_DOMAINS:
-        inc = [d for d in inc if d in APPROVED_DOMAINS] or list(APPROVED_DOMAINS)
+        inc = [d for d in inc
+               if any(d == a or d.endswith("." + a) for a in APPROVED_DOMAINS)
+               ] or list(APPROVED_DOMAINS)
     if inc:
-        payload["include_domains"] = inc
+        payload["include_domains"] = list(dict.fromkeys(inc))
 
     exc = list(exclude_domains or []) + list(BLOCKED_DOMAINS)
     if exc:

@@ -35,14 +35,37 @@ def _split_list(raw: str) -> list[str]:
         host = p.strip().lower()
         if not host:
             continue
-        # Allow users to paste full URLs; keep only the host portion.
+        # Allow users to paste full URLs; keep only the host portion. Normalise
+        # the host the SAME way candidate URLs are normalised (see _host_of in
+        # tavily_client) so an approved "www.gov.ae" / "https://www.gov.ae/x"
+        # still matches a candidate host of "gov.ae" — otherwise the allow-list
+        # would silently match nothing.
         host = host.split("://", 1)[-1]
         host = host.split("/", 1)[0]
-        host = host.lstrip("*.")  # treat "*.gov.ae" and "gov.ae" the same
+        if host.startswith("*."):
+            host = host[2:]  # treat "*.gov.ae" and "gov.ae" the same
+        if host.startswith("www."):
+            host = host[4:]
         if host:
             out.append(host)
     # De-duplicate while preserving order.
     return list(dict.fromkeys(out))
+
+
+def _num_env(name: str, default, cast):
+    """Parse a numeric env var, falling back to *default* on a bad value.
+
+    A typo like ``MAX_RESULTS=eight`` should not crash the whole server at
+    import; log a warning and use the default instead.
+    """
+    raw = os.getenv(name)
+    if raw is None or raw == "":
+        return default
+    try:
+        return cast(raw)
+    except (TypeError, ValueError):
+        logger.warning("Invalid %s=%r; using default %r", name, raw, default)
+        return default
 
 
 # --- Tavily ---------------------------------------------------------------
@@ -61,19 +84,19 @@ DOMAIN_ENFORCE = os.getenv("DOMAIN_ENFORCE", "true").lower() not in (
 
 # --- Search defaults ------------------------------------------------------
 # How many results a search returns by default (callers can override per call).
-MAX_RESULTS = int(os.getenv("MAX_RESULTS", "8"))
+MAX_RESULTS = _num_env("MAX_RESULTS", 8, int)
 # "basic" (fast, cheaper) or "advanced" (deeper, better for hard questions).
 DEFAULT_SEARCH_DEPTH = os.getenv("DEFAULT_SEARCH_DEPTH", "basic").lower()
 # Default recency window for news searches: day | week | month | year.
 DEFAULT_TIME_RANGE = os.getenv("DEFAULT_TIME_RANGE", "week").lower()
 # Cap the characters of fetched article text so one long page can't overflow
 # the agent's context window. 0 disables capping.
-MAX_CONTENT_CHARS = int(os.getenv("MAX_CONTENT_CHARS", "8000"))
+MAX_CONTENT_CHARS = _num_env("MAX_CONTENT_CHARS", 8000, int)
 # Outbound request timeout (seconds).
-REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "30"))
+REQUEST_TIMEOUT = _num_env("REQUEST_TIMEOUT", 30.0, float)
 
 # --- Server / transport ---------------------------------------------------
-HOST_PORT = int(os.getenv("HOST_PORT", "8140"))
+HOST_PORT = _num_env("HOST_PORT", 8140, int)
 # Optional static API key protecting the direct HTTP endpoint. Clients send it
 # as X-API-Key or Authorization: Bearer.
 MCP_API_KEY = os.getenv("MCP_API_KEY", "")

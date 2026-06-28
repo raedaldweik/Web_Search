@@ -8,6 +8,8 @@ be protected with a static API key via ``MCP_API_KEY`` (sent as ``X-API-Key``
 or ``Authorization: Bearer``).
 """
 
+import hmac
+
 import uvicorn
 from fastmcp import FastMCP
 from starlette.responses import JSONResponse
@@ -58,7 +60,7 @@ class ApiKeyMiddleware:
             parts = headers.get("authorization", "").split()
             if len(parts) == 2 and parts[0].lower() == "bearer":
                 provided = parts[1]
-        if provided != self.api_key:
+        if not hmac.compare_digest(provided, self.api_key):
             response = JSONResponse({"error": "invalid or missing API key"},
                                     status_code=401)
             return await response(scope, receive, send)
