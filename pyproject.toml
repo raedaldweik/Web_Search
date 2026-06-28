@@ -1,0 +1,31 @@
+[project]
+name = "news-mcp-server"
+version = "0.1.0"
+description = "News & Intelligence MCP server (Tavily-backed) for SAS Retrieval Agent Manager"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=3.0.0,<4.0.0",
+    "httpx>=0.28.1",
+    "python-dotenv>=1.2.1",
+    "uvicorn>=0.38.0",
+]
+
+[project.scripts]
+app-http-direct = "news_mcp_server.http_direct_server:main"
+app-stdio = "news_mcp_server.stdio_server:main"
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.14.4",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
