@@ -44,8 +44,8 @@ async def test_search_news_shapes_results(registered, monkeypatch):
         return SAMPLE
 
     monkeypatch.setattr(tools_mod, "search", fake_search)
-    out = await registered["search_news"](None, "dubai traffic")
-    assert out["query"] == "dubai traffic"
+    out = await registered["search_news"](None, "saudi procurement")
+    assert out["query"] == "saudi procurement"
     assert len(out["articles"]) == 2
     a = out["articles"][0]
     assert a["source"] == "reuters.com"
@@ -60,7 +60,7 @@ async def test_search_web_includes_answer(registered, monkeypatch):
         return SAMPLE
 
     monkeypatch.setattr(tools_mod, "search", fake_search)
-    out = await registered["search_web"](None, "what is RTA")
+    out = await registered["search_web"](None, "what is NCGR")
     assert out["answer"] == "an answer"
     assert len(out["sources"]) == 2
 

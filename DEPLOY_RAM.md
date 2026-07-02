@@ -72,8 +72,8 @@ This is the same pattern as the SAS Viya MCP template (image
 3. Paste `prompts/news-intelligence-agent/system_prompt.md` into the agent
    instructions; keep `{context}` in the Retrieval Settings prompt (Top K 4–6).
 
-Then point the custom RTA UI (Roads_RAM_UI) at this agent and try:
-*"What's new in road-safety regulation this week?"*
+Then point the custom NCGR UI (Finance_RAM_UI) at this agent and try:
+*"What's new in Saudi government procurement this week?"*
 
 ## Tools exposed
 
